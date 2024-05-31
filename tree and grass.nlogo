@@ -6,7 +6,7 @@ extensions [
 ;智能体的基因型对应于其在适应度环境中的位置
 breed [cao caos]
 breed [tree trees]
-globals [    Si  u Zi birth   i  color1 gene_path11 gene_path22 gene-path33 gene-path44 male
+globals [    Si  u Zi birth   i  ii color1 gene_path11 gene_path22 gene-path33 gene-path44 male
 p  n inner element  first-half behind-half mix mix1 mix2 s1 s2 s3 s4 per]
 ;gene_set 是基因组 d  Si omega u 死亡判断的参数 Zi 个体表型 birth可出生个体数 Gene_path1/2 繁殖中传递的基因组
 
@@ -139,9 +139,6 @@ to died
       if random-float 1 > huo[
       set pcolor  black]
 end
-
-
-
 to go-sexual
   ask patches[set rain-local rain + random-normal 0 0.025]
   ;if ticks mod 1000 = 0
@@ -223,7 +220,6 @@ stop]
   ]]
   ;show "1"
 end
-
 to go-unsexual
     ask patches[set rain-local rain + random-normal 0 0.025]
     if ticks mod 1000 = 0
@@ -269,14 +265,14 @@ to go-unsexual
 end
 to go-plant
       ask patches[set rain-local rain + random-normal 0 0.025]
-    if ticks mod 1000 = 0
-[ ifelse random 2 = 1
-    [ rain-plus]
-    [ rain-minus
-    ]
+    ;if ticks mod 1000 = 0
+;[ ifelse random 2 = 1
+   ; [ rain-plus]
+   ; [ rain-minus
+   ; ]
     ;random-norm al mean standard-deviation
   ; do something
-]
+;]
 
   ask patches[
     ;show gene2
@@ -336,6 +332,8 @@ to go-plant
      ifelse random 2  = 1
     [set sex 1]
     [set sex 0]
+              if gene1 = 0[stop]
+              if gene2 = 0[stop]
 
       set phynotype (sum gene1 + sum gene2) / 40 + random-normal 0 0.025
             set male  0;导致死亡过快。
@@ -345,7 +343,278 @@ to go-plant
 stop]
   ]]
  ; show "1"
+  destroy
+  tick
 end
+to destroy
+  set ii  0
+  loop[
+    ask one-of patches [
+    set pcolor black
+    ask neighbors[set pcolor black]
+  ]
+        set ii  ii + 1
+      if ii > disturbance [stop]
+  ]
+end
+to go-species
+      ask patches[set rain-local rain + random-normal 0 0.025]
+    if ticks mod 1000 = 0
+[ ifelse random 2 = 1
+    [ rain-plus]
+    [ rain-minus
+    ]
+    ;random-norm al mean standard-deviation
+  ; do something
+]
+
+  ask patches[
+    ;show gene2
+     if phynotype = 0 [set pcolor black];防止错误数据
+    set rain-local rain + random-normal 0 0.025
+    if pcolor != black[
+      ;show "33";这里存在循环进不去的问题
+      set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+      if random-float 1 > huo[
+      set pcolor  black]
+      loop[ if pcolor = blue  [if ticks mod 9 != 0 [stop]]
+        if pcolor = red  [if ticks mod 9 != 0 [stop]]
+        get-color
+    ;get-colorsim;获得color1，包涵斑块颜色。
+      if sex = 0 [
+
+
+       ifelse random 2  = 1
+          [ifelse per > 0.7
+            [set gene_path11 gene1]
+              [set gene_path11 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene_path22 gene2]
+              [set gene_path22 go2 gene1 gene2]     ];赋值操作导致了原变量丢失？
+        ;show gene-path33
+        ;show "33"
+;if count neighbors with [pcolor = color1 and sex = 1] > 0[
+      ;ask  one-of neighbors with [pcolor = color1 and sex = 1][;
+      ifelse random 2  = 1
+                    [ifelse per > 0.7
+            [set gene-path33 gene1]
+              [set gene-path33 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene-path44 gene2]
+              [set gene-path44 go2 gene1 gene2]     ]
+       ;show gene-path44
+      ; show "44"
+       ;show "2"
+       ;show gene2
+       set male 1]
+   ; set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+     ; if random-float 1 > huo[
+     ; set pcolor  black]
+      if male = 1 [
+    if count  neighbors with [pcolor = black] > 0[
+    ask one-of neighbors with [pcolor = black][
+        anti-color
+        ;anti-colorsim
+      set gene1 gene-path33
+         ; show gene1
+        ;show "1"
+          ;show gene-path44
+      set gene2 gene-path44
+        ;show gene2
+        ;show "2"
+     ifelse random 2  = 1
+    [set sex 1]
+    [set sex 0]
+              if gene1 = 0[stop]
+              if gene2 = 0[stop]
+
+      set phynotype (sum gene1 + sum gene2) / 40 + random-normal 0 0.025
+            set male  0;导致死亡过快。
+             ; show "+1"
+
+    ]]]
+stop]
+  ]]
+ ; show "1"
+  tick
+end
+to try
+
+ask patches[set rain-local rain + random-normal 0 0.025]
+    if ticks mod 1000 = 0[
+ ifelse random 2 = 1
+    [ rain-plus]
+    [ rain-minus
+  ]]
+
+  ask patches [ if pcolor = white  [grass]
+    if pcolor = yellow  [grass]
+    if pcolor = blue  [trees1]
+    if pcolor = white  [trees1]
+
+
+
+
+  ]
+
+
+tick
+end
+to grass
+   ask patches [
+    ;show gene2
+     if phynotype = 0 [set pcolor black];防止错误数据
+
+    if pcolor != black[
+      ;show "33";这里存在循环进不去的问题
+      set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+      if random-float 1 > huo[
+      set pcolor  black]
+      loop[ ;if pcolor = blue  [if ticks mod 9 != 0 [stop]]
+        ;if pcolor = red  [if ticks mod 9 != 0 [stop]]
+        get-color
+    ;get-colorsim;获得color1，包涵斑块颜色。
+      if sex = 0 [
+
+
+       ifelse random 2  = 1
+          [ifelse per > 0.7
+            [set gene_path11 gene1]
+              [set gene_path11 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene_path22 gene2]
+              [set gene_path22 go2 gene1 gene2]     ];赋值操作导致了原变量丢失？
+        ;show gene-path33
+        ;show "33"
+;if count neighbors with [pcolor = color1 and sex = 1] > 0[
+      ;ask  one-of neighbors with [pcolor = color1 and sex = 1][;
+      ifelse random 2  = 1
+                    [ifelse per > 0.7
+            [set gene-path33 gene1]
+              [set gene-path33 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene-path44 gene2]
+              [set gene-path44 go2 gene1 gene2]     ]
+       ;show gene-path44
+      ; show "44"
+       ;show "2"
+       ;show gene2
+       set male 1]
+   ; set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+     ; if random-float 1 > huo[
+     ; set pcolor  black]
+      if male = 1 [
+    if count  neighbors with [pcolor = black] > 0[
+    ask one-of neighbors with [pcolor = black][
+        anti-color
+        ;anti-colorsim
+      set gene1 gene-path33
+         ; show gene1
+        ;show "1"
+          ;show gene-path44
+      set gene2 gene-path44
+        ;show gene2
+        ;show "2"
+     ifelse random 2  = 1
+    [set sex 1]
+    [set sex 0]
+              if gene1 = 0[stop]
+              if gene2 = 0[stop]
+
+      set phynotype (sum gene1 + sum gene2) / 40 + random-normal 0 0.025
+            set male  0;导致死亡过快。
+             ; show "+1"
+
+    ]]]
+stop]
+  ]
+    ; show "1"
+  ]
+
+
+
+end
+to trees1
+  ask patches[
+if phynotype = 0 [set pcolor black];防止错误数据
+
+    if pcolor != black[
+      ;show "33";这里存在循环进不去的问题
+      set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+    loop [   if pcolor = blue  [if ticks mod 9 != 0 [stop]]
+        if pcolor = red  [if ticks mod 9 != 0 [stop]]
+    if random-float 1 > huo[
+      set pcolor  black]
+    ]
+      loop[ if pcolor = blue  [if ticks mod 9 != 0 [stop]]
+        if pcolor = red  [if ticks mod 9 != 0 [stop]]
+        get-color
+    ;get-colorsim;获得color1，包涵斑块颜色。
+      if sex = 0 [
+
+
+       ifelse random 2  = 1
+          [ifelse per > 0.7
+            [set gene_path11 gene1]
+              [set gene_path11 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene_path22 gene2]
+              [set gene_path22 go2 gene1 gene2]     ];赋值操作导致了原变量丢失？
+        ;show gene-path33
+        ;show "33"
+;if count neighbors with [pcolor = color1 and sex = 1] > 0[
+      ;ask  one-of neighbors with [pcolor = color1 and sex = 1][;
+      ifelse random 2  = 1
+                    [ifelse per > 0.7
+            [set gene-path33 gene1]
+              [set gene-path33 go1 gene1 gene2]      ]
+
+            [ifelse per > 0.7
+              [set gene-path44 gene2]
+              [set gene-path44 go2 gene1 gene2]     ]
+       ;show gene-path44
+      ; show "44"
+       ;show "2"
+       ;show gene2
+       set male 1]
+   ; set huo   (1 - d) * exp (-(((phynotype - rain-local) ^ 2))/ omega )
+     ; if random-float 1 > huo[
+     ; set pcolor  black]
+      if male = 1 [
+    if count  neighbors with [pcolor = black] > 0[
+    ask one-of neighbors with [pcolor = black][
+        anti-color
+        ;anti-colorsim
+      set gene1 gene-path33
+         ; show gene1
+        ;show "1"
+          ;show gene-path44
+      set gene2 gene-path44
+        ;show gene2
+        ;show "2"
+     ifelse random 2  = 1
+    [set sex 1]
+    [set sex 0]
+              if gene1 = 0[stop]
+              if gene2 = 0[stop]
+
+      set phynotype (sum gene1 + sum gene2) / 40 + random-normal 0 0.025
+            set male  0;导致死亡过快。
+             ; show "+1"
+
+    ]]]
+stop]
+  ]
+ ; show "1"
+  ]
+
+end
+
 to get-color
   if pcolor = white[
     set color1  "white"]
@@ -374,10 +643,6 @@ to anti-color
   ;show count patches with  [ pcolor = white ]
   ;count patches with [phynotype < 0.3 and pcolor = white]
 end
-
-;;;;;死亡率有问题
-;globals [gene1 gene2 p  n inner element i first-half behind-half mix mix1 mix2 s1 s2 s3 s4 per]
-
 to-report transition1 [gene]
   set element []
   ;show "tiaoshi"
@@ -400,7 +665,6 @@ to-report transition1 [gene]
 
 
 end
-
 to-report transition2 [gene]
     set element []
   set i 0
@@ -437,7 +701,7 @@ to-report go1 [genep1  genep2]
 ;set genep1 py:runresult"np.random.binomial(1, 0.2,5)"
 ;set genep2 py:runresult"np.random.binomial(1, 0.2,5)"
 set n  random  (length genep1)
-  if  per < 0.7 [
+  ifelse  per < 0.7 [
   ;show n
   ;show "gene1"
   ;show gene1
@@ -465,6 +729,7 @@ set n  random  (length genep1)
 
   report mix1
   ]
+  [report genep1]
 
 end
 to-report go2 [genep1  genep2]
@@ -477,7 +742,7 @@ to-report go2 [genep1  genep2]
 ;set genep1 py:runresult"np.random.binomial(1, 0.2,5)"
 ;set genep2 py:runresult"np.random.binomial(1, 0.2,5)"
 set n  random  (length genep1)
-  if  per < 0.7 [
+  ifelse  per < 0.7 [
   ;show n
   ;show "gene1"
   ;show gene1
@@ -496,7 +761,7 @@ set n  random  (length genep1)
 
   set  mix1   joint s1 s4
 
-  set  mix2 joint s3 s2
+  set  mix2   joint s3 s2
   ;show "gene1"
   ;show mix1
   ;show "gene2"
@@ -505,6 +770,7 @@ set n  random  (length genep1)
 
   report mix2
   ]
+  [report genep2]
 
 end
 @#$#@#$#@
@@ -533,7 +799,7 @@ GRAPHICS-WINDOW
 0
 1
 ticks
-60.0
+120.0
 
 BUTTON
 65
@@ -615,10 +881,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-55
-248
-167
-281
+56
+239
+168
+272
 NIL
 go-unsexual
 NIL
@@ -657,17 +923,17 @@ fanzhilv-sex
 fanzhilv-sex
 0
 100
-50.0
+44.0
 1
 1
 NIL
 HORIZONTAL
 
 BUTTON
-59
-299
-149
-332
+64
+281
+154
+314
 NIL
 go-plant\n
 T
@@ -679,6 +945,77 @@ NIL
 NIL
 NIL
 1
+
+PLOT
+40
+361
+240
+511
+plot 1
+NIL
+NIL
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"white" 1.0 0 -16777216 true "" "plot count patches with [pcolor = white]"
+"yellow" 1.0 0 -1184463 true "" "plot count patches with [pcolor = yellow]"
+"blue" 1.0 0 -13791810 true "" "plot count patches with [pcolor = blue]"
+"red" 1.0 0 -5298144 true "" "plot count patches with [pcolor = red]"
+"rain" 1.0 0 -10141563 true "" "plot rain * 10000"
+
+BUTTON
+67
+322
+172
+355
+NIL
+go-species
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+54
+558
+117
+591
+NIL
+try
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+171
+291
+343
+324
+disturbance
+disturbance
+0
+500
+100.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -1026,6 +1363,15 @@ NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="experiment" repetitions="100" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go-plant</go>
+    <timeLimit steps="999"/>
+    <metric>plot count patches with [pcolor = white]</metric>
+    <steppedValueSet variable="rain" first="0" step="1" last="0.1"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
